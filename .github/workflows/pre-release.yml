@@ -21,20 +21,31 @@ jobs:
       contents: write
     steps:
       - name: Check out repository
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Set up Node.js
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
+        with:
+          cache: npm
+          node-version-file: '.nvmrc'
       - name: Install dependencies
-        run: npm install
-      - name: Build
+        run: npm ci
+      - name: Build all packages
         env:
           PUBLISH: 1
         run: |
+          npm run build
+      - name: Build docs
+        env:
+          PUBLISH: 1
+        run: |
+          npm run changelog
           npm run docs
       - name: Version docs
         working-directory: ./website
         run: |
-          npm install
+          npm ci
           npm run docusaurus docs:version $(jq -r .version ../packages/puppeteer/package.json)
           npm run archive
       - name: Re-build docs after versioning
@@ -44,6 +55,7 @@ jobs:
           npm run docs
       - name: Format
         run: npm run format
+      # Release-please does not update the package-lock
       - name: Install to refresh package-lock
         run: npm install
       - name: Commit
