@@ -1,23 +1,13 @@
 /**
- * Copyright 2023 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @license
+ * Copyright 2023 Google Inc.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
-import assert from 'assert';
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
+import assert from 'node:assert';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 
 import {
   CDP_WEBSOCKET_ENDPOINT_REGEX,
@@ -37,9 +27,9 @@ describe('Chrome', () => {
         browser: Browser.CHROME,
         platform: BrowserPlatform.LINUX,
         buildId: '123',
-        cacheDir: 'cache',
+        cacheDir: '.cache',
       }),
-      path.join('cache', 'chrome', 'linux-123', 'chrome-linux64', 'chrome')
+      path.join('.cache', 'chrome', 'linux-123', 'chrome-linux64', 'chrome'),
     );
   });
 
@@ -52,7 +42,7 @@ describe('Chrome', () => {
 
     beforeEach(async () => {
       tmpDir = fs.mkdtempSync(
-        path.join(os.tmpdir(), 'puppeteer-browsers-test')
+        path.join(os.tmpdir(), 'puppeteer-browsers-test'),
       );
       await install({
         cacheDir: tmpDir,
@@ -87,7 +77,6 @@ describe('Chrome', () => {
         '--disable-renderer-backgrounding',
         '--disable-sync',
         '--enable-automation',
-        '--enable-features=NetworkServiceInProcess2',
         '--export-tagged-pdf',
         '--force-color-profile=srgb',
         '--headless=new',
