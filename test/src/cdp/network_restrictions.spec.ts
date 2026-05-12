@@ -378,18 +378,14 @@ describe('Network Restrictions', function () {
   });
 
   it('should throw an error for an invalid pattern', async () => {
-    let error: Error | undefined;
-    await launch(
-      {
-        blocklist: ['(invalid pattern'],
-      },
-      {createContext: true},
-    ).catch(e => {
-      return (error = e);
-    });
-
-    expect(error).toBeDefined();
-    expect(error?.message.includes('URLPattern')).toBeTruthy();
+    await expect(
+      launch(
+        {
+          blocklist: ['(invalid pattern'],
+        },
+        {createContext: true},
+      ),
+    ).rejects.toThrow('URLPattern');
   });
 
   it('should block chrome://version/ when it matches blocklist', async () => {
@@ -402,12 +398,7 @@ describe('Network Restrictions', function () {
     );
 
     try {
-      const result = await page.goto(blockedUrl).catch(e => {
-        return e;
-      });
-
-      expect(result).toBeInstanceOf(Error);
-      expect(result?.message).toContain(
+      await expect(page.goto(blockedUrl)).rejects.toThrow(
         'is blocked by blocklist/allowlist rules',
       );
     } finally {
@@ -513,6 +504,43 @@ describe('Network Restrictions', function () {
       expect(error).toBeDefined();
       expect(error?.message).toContain(
         'is blocked by blocklist/allowlist rules',
+      );
+    } finally {
+      await close();
+    }
+  });
+
+  it('should block standard emulation reset when blocklist/allowlist is active', async () => {
+    const {page, close} = await launch(
+      {
+        blocklist: ['*://*:*/empty.html'],
+      },
+      {createContext: true},
+    );
+
+    try {
+      const session = await page.createCDPSession();
+
+      await expect(
+        session.send('Network.emulateNetworkConditions', {
+          offline: false,
+          latency: 0,
+          downloadThroughput: 0,
+          uploadThroughput: 0,
+        }),
+      ).rejects.toThrow(
+        'Cannot reset network conditions: rule-based emulation is enabled.',
+      );
+
+      await expect(
+        page.emulateNetworkConditions({
+          offline: false,
+          latency: 0,
+          download: 0,
+          upload: 0,
+        }),
+      ).rejects.toThrow(
+        'Cannot reset network conditions: rule-based emulation is enabled.',
       );
     } finally {
       await close();
